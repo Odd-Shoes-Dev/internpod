@@ -720,50 +720,69 @@ window.signIn = async function() {
   sessionStorage.setItem('signup_intent', 'intern')
   await supabase.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: window.location.origin + '/profile' }})
 }
-window.signOut = async function() { await supabase.auth.signOut(); location.reload() }
+function clearCache() {
+  ['boj_uid','boj_role','boj_has_profile'].forEach(k => localStorage.removeItem(k))
+}
+window.signOut = async function() { clearCache(); await supabase.auth.signOut(); location.reload() }
+
+// Race any Supabase DB query against a 3s timeout — never hang forever
+function dbFetch(query, fallback = { data: null, error: null }) {
+  const t = new Promise(r => setTimeout(() => r(fallback), 3000))
+  return Promise.race([query, t])
+}
 
 // ── Boot ─────────────────────────────────────
 let _routing = false
-async function boot() {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { showScreen('auth-screen'); return }
-  currentUser = session.user
-  await routeByRole()
-}
 
-async function routeByRole() {
+function routeByRole() {
   if (_routing) return
   _routing = true
   try {
     setupTopbar()
-    const { data: prof, error: e1 } = await supabase.from('profiles').select('role').eq('id', currentUser.id).maybeSingle()
-    if (e1) throw e1
-    if (!prof) { showScreen('role-screen'); return }
-    if (prof.role === 'startup') { showScreen('wrong-role-screen'); return }
-    if (prof.role === 'admin') { location.href = '/admin'; return }
+    const uid = currentUser.id
+    const role      = localStorage.getItem('boj_role')
+    const cacheUid  = localStorage.getItem('boj_uid')
+    const hasProfile = localStorage.getItem('boj_has_profile')
 
-    const { data: existingIntern, error: e2 } = await supabase.from('interns').select('*').eq('user_id', currentUser.id).maybeSingle()
-    if (e2) throw e2
-    if (existingIntern) {
-      existingProfile = existingIntern
-      fillEditForm(existingIntern)
-      document.getElementById('live-banner').style.display = 'flex'
-      document.getElementById('btn-save-label').textContent = 'Update Profile'
-      document.getElementById('btn-delete').style.display = 'block'
-      document.getElementById('btn-save').disabled = false
-      initEditTagsInput()
-      watchEditInputs()
-      updatePreview()
-      showScreen('app')
-    } else {
-      startWizard()
+    if (cacheUid === uid && role) {
+      if (role === 'startup') { showScreen('wrong-role-screen'); return }
+      if (role === 'admin')   { location.href = '/admin'; return }
+      if (hasProfile) { loadExistingProfile(uid); return }
+      startWizard(); return
     }
-  } catch (err) {
-    console.error('routeByRole:', err)
-    showScreen('auth-screen')   // never stay on loader
+
+    // No localStorage match → ask user to pick role (no DB query)
+    showScreen('role-screen')
   } finally {
     _routing = false
   }
+}
+
+async function loadExistingProfile(uid) {
+  showScreen('loading-screen')
+  const { data } = await dbFetch(supabase.from('interns').select('*').eq('user_id', uid).maybeSingle())
+  if (data) {
+    existingProfile = data
+    fillEditForm(data)
+    document.getElementById('live-banner').style.display = 'flex'
+    document.getElementById('btn-save-label').textContent = 'Update Profile'
+    document.getElementById('btn-delete').style.display = 'block'
+    document.getElementById('btn-save').disabled = false
+    initEditTagsInput()
+    watchEditInputs()
+    updatePreview()
+    showScreen('app')
+  } else {
+    // DB timed out — profile might exist in DB but we can't reach it
+    // Show app with empty form so user can re-enter (will upsert on save)
+    showScreen('app')
+  }
+}
+
+async function boot() {
+  await new Promise(r => setTimeout(r, 1000))
+  if (currentUser) return
+  showScreen('auth-screen')
 }
 
 function setupTopbar() {
@@ -908,14 +927,15 @@ window.wzPublish = async function() {
   btn.disabled = true
   btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0"></div> Saving…'
   const payload = getWzData()
-  const { data, error } = await supabase.from('interns').insert(payload).select().single()
-  if (error) {
+  const { data, error } = await dbFetch(supabase.from('interns').insert(payload).select().single())
+  if (error && error.message !== 'timeout') {
     btn.disabled = false
     btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Publish my profile'
     alert('Error saving profile: ' + error.message)
     return
   }
-  existingProfile = data
+  existingProfile = data || payload
+  localStorage.setItem('boj_has_profile', '1')
   // Show completion
   document.getElementById('wz-final-preview').innerHTML = buildCardHtml(payload)
   updateWzDots(4)
@@ -939,8 +959,12 @@ window.goToEditProfile = function() {
 
 // ── EDIT FORM ─────────────────────────────────
 window.pickRole = async function(role) {
-  const { error } = await supabase.from('profiles').insert({ id: currentUser.id, role, email: currentUser.email })
-  if (error) { alert('Error: ' + error.message); return }
+  // Save to cache immediately — don't wait for DB (DB may hang)
+  localStorage.setItem('boj_uid', currentUser.id)
+  localStorage.setItem('boj_role', role)
+  // Fire DB insert in background
+  dbFetch(supabase.from('profiles').insert({ id: currentUser.id, role, email: currentUser.email }))
+    .then(({ error }) => { if (error) console.warn('profiles insert:', error.message) })
   if (role === 'startup') { location.href = '/hiring'; return }
   startWizard()
 }
@@ -1056,15 +1080,16 @@ window.saveProfile = async function() {
   const payload = getEditFormData()
   let error
   if (existingProfile) {
-    ({ error } = await supabase.from('interns').update(payload).eq('id', existingProfile.id))
+    ({ error } = await dbFetch(supabase.from('interns').update(payload).eq('id', existingProfile.id)))
   } else {
-    const res = await supabase.from('interns').insert(payload).select().single()
+    const res = await dbFetch(supabase.from('interns').insert(payload).select().single())
     error = res.error
     if (!error) existingProfile = res.data
   }
-  if (error) {
+  if (error && error.message !== 'timeout') {
     status.textContent = 'Error: ' + error.message; status.className = 'save-status err'; status.style.display = 'block'
   } else {
+    localStorage.setItem('boj_has_profile', '1')
     status.textContent = 'Saved ✓'; status.style.display = 'block'
     document.getElementById('live-banner').style.display = 'flex'
     document.getElementById('btn-save-label').textContent = 'Update Profile'
@@ -1077,8 +1102,8 @@ window.saveProfile = async function() {
 window.deleteProfile = async function() {
   if (!existingProfile) return
   if (!confirm('Remove your profile? You can re-publish any time.')) return
-  const { error } = await supabase.from('interns').delete().eq('id', existingProfile.id)
-  if (error) { alert('Error: ' + error.message); return }
+  const { error } = await dbFetch(supabase.from('interns').delete().eq('id', existingProfile.id))
+  if (error && error.message !== 'timeout') { alert('Error: ' + error.message); return }
   existingProfile = null
   document.getElementById('live-banner').style.display = 'none'
   document.getElementById('btn-save-label').textContent = 'Publish Profile'
@@ -1112,17 +1137,40 @@ function buildCardHtml(intern) {
 }
 
 supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session?.user && !currentUser) {
-    currentUser = session.user
-    await routeByRole()
-  } else if (event === 'SIGNED_OUT') {
+  if (event === 'INITIAL_SESSION') {
+    if (session?.user) {
+      currentUser = session.user
+      routeByRole()
+    } else {
+      showScreen('auth-screen')
+    }
+    return
+  }
+  if (event === 'SIGNED_IN' && session?.user) {
+    if (!currentUser || currentUser.id !== session.user.id) {
+      currentUser = session.user
+      routeByRole()
+    }
+    return
+  }
+  if (event === 'SIGNED_OUT') {
     currentUser = null
     _routing = false
+    clearCache()
     showScreen('auth-screen')
   }
 })
 
-boot()
+// Failsafe: if loading screen still visible after 5s, something went wrong
+setTimeout(() => {
+  const ls = document.getElementById('loading-screen')
+  if (ls && ls.style.display !== 'none') {
+    console.warn('[auth] failsafe triggered — showing auth screen')
+    showScreen('auth-screen')
+  }
+}, 5000)
+
+boot().catch(err => { console.error('[boot]', err); showScreen('auth-screen') })
 </script>
 </body>
 </html>
