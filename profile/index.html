@@ -717,6 +717,7 @@ function showScreen(id) {
 
 // ── Auth ──────────────────────────────────────
 window.signIn = async function() {
+  sessionStorage.setItem('signup_intent', 'intern')
   await supabase.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: window.location.origin + '/profile' }})
 }
 window.signOut = async function() { await supabase.auth.signOut(); location.reload() }

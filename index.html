@@ -367,25 +367,23 @@ function subDev(){const n=document.getElementById('d-name').value,em=document.ge
 function subUni(){const n=document.getElementById('u-name').value,uni=document.getElementById('u-uni').value,em=document.getElementById('u-em').value;if(!n||!uni||!em){alert('Please fill in name, university, and email.');return}ml('Blue Ox Jobs University — '+uni,'Name: '+n+'\nUniversity: '+uni+'\nEmail: '+em+'\nRole: '+document.getElementById('u-role').value+'\nStudents: '+document.getElementById('u-sz').value+'\nDepts: '+document.getElementById('u-dept').value+'\nNotes: '+document.getElementById('u-nt').value);document.getElementById('uni-fv').style.display='none';document.getElementById('uni-ok').classList.add('active')}
 </script>
 
-<!-- Smart CTAs: if already signed in, update buttons to skip sign-in -->
+<!-- Session check: auto-redirect signed-in users so they never get stuck on the landing page -->
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 const supabase = createClient('https://krmqoseusxmjdlfxxdjy.supabase.co','sb_publishable_3Bsp_RSJW6Hvdvw9gB3Avg_tbpgQsj_')
-const { data: { session } } = await supabase.auth.getSession()
-if (session?.user) {
-  const { data: prof } = await supabase.from('profiles').select('role').eq('id', session.user.id).maybeSingle()
-  const role = prof?.role
-  // Update "Request a Pod" buttons for startups
-  document.querySelectorAll('a[href="/hiring"]').forEach(el => {
-    if (role === 'startup') { el.textContent = 'Go to Dashboard →' }
-  })
-  // Update "Join a Pod" / talent buttons for interns
-  document.querySelectorAll('a[href="/profile"]').forEach(el => {
-    if (role === 'intern') {
-      el.textContent = 'My Profile →'
-    }
-  })
-}
+
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
+    const { data: prof } = await supabase.from('profiles').select('role').eq('id', session.user.id).maybeSingle()
+    // Known role → send directly to their space
+    if (prof?.role === 'startup') { location.replace('/hiring'); return }
+    if (prof?.role === 'intern')  { location.replace('/profile'); return }
+    if (prof?.role === 'admin')   { location.replace('/admin'); return }
+    // Brand-new user (no role yet) — use the intent they stored before clicking Sign In
+    const intent = sessionStorage.getItem('signup_intent')
+    location.replace(intent === 'intern' ? '/profile' : '/hiring')
+  }
+})
 </script>
 </body>
 </html>

@@ -589,7 +589,7 @@ function showScreen(id) {
 window.doSignOut = async function() { await supabase.auth.signOut(); location.reload() }
 
 document.getElementById('btn-google-signin').addEventListener('click', async () => {
-  // Explicit URL so OAuth always returns here, never to the homepage
+  sessionStorage.setItem('signup_intent', 'startup')
   await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/hiring' } })
 })
 document.getElementById('btn-signout').addEventListener('click', window.doSignOut)
