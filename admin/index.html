@@ -153,6 +153,63 @@ a{text-decoration:none;color:inherit}
 .spinner{width:20px;height:20px;border:2.5px solid var(--gray-200);border-top-color:var(--coral);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty-msg{text-align:center;padding:40px;color:var(--gray-400);font-family:var(--serif);font-size:1rem;font-style:italic}
+
+/* ═══ MOBILE — 768px ═══ */
+@media(max-width:768px){
+  /* Auth/denied screen boxes */
+  .screen-box{padding:36px 24px}
+  /* Topbar */
+  .topbar{padding:0 14px;height:56px}
+  .topbar-email{display:none}
+  .admin-badge{display:none}
+  /* Tab bar: scroll horizontally without wrapping */
+  .tab-bar{padding:0 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;display:flex;flex-wrap:nowrap}
+  .tab-btn{padding:12px 14px;font-size:.82rem;flex-shrink:0}
+  .tab-count{font-size:.55rem}
+  /* Main padding */
+  .main{padding:16px}
+  /* Stats row: 2 columns on mobile */
+  .stats-row{grid-template-columns:1fr 1fr;gap:12px}
+  .stat-card{padding:16px}
+  .stat-val{font-size:1.6rem}
+  /* Section header: stack */
+  .section-header{flex-direction:column;align-items:flex-start;gap:10px}
+  .search-bar{max-width:100%;width:100%}
+  /* Intern grid: single column */
+  .intern-grid{grid-template-columns:1fr}
+  /* Startup detail grid: 2 cols */
+  .startup-detail-grid{grid-template-columns:1fr 1fr}
+  /* Modal */
+  .modal-overlay{padding:12px}
+  .modal{border-radius:14px}
+  .modal-grid{grid-template-columns:1fr}
+  .modal-header{padding:16px 18px}
+  .modal-body{padding:18px}
+  .modal-footer{padding:14px 18px;flex-direction:column-reverse;gap:8px}
+  .btn-modal-save,.btn-modal-cancel{width:100%;min-height:44px;justify-content:center}
+  /* Startup head: wrap meta text */
+  .startup-meta{white-space:normal;word-break:break-word}
+  /* Buttons */
+  .btn-edit,.btn-del{min-height:40px}
+}
+
+/* ═══ MOBILE — 480px ═══ */
+@media(max-width:480px){
+  .screen-box{padding:28px 18px;border-radius:16px}
+  /* Prevent iOS zoom */
+  .m-field input,.m-field select,.m-field textarea,
+  .search-bar input{font-size:16px}
+  /* Stats: single column */
+  .stats-row{grid-template-columns:1fr}
+  .stat-val{font-size:1.5rem}
+  /* Topbar brand */
+  .topbar-brand span{font-size:15px}
+  .topbar-brand img{width:26px;height:26px}
+  /* Startup detail grid: single column */
+  .startup-detail-grid{grid-template-columns:1fr}
+  /* Quick links: vertical */
+  .main > div[style*="display:flex"]{flex-direction:column}
+}
 </style>
 </head>
 <body>

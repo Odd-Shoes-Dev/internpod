@@ -236,6 +236,71 @@ a{text-decoration:none;color:inherit}
 
 .reveal{opacity:0;transform:translateY(24px);transition:all .6s cubic-bezier(.22,1,.36,1)}.reveal.vis{opacity:1;transform:translateY(0)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ═══ MOBILE — 768px ═══ */
+@media(max-width:768px){
+  /* Nav */
+  .nav{padding:16px 20px}
+  .nav-left,.nav-right{display:none}
+  /* Hero */
+  .hero{padding:60px 20px 48px}
+  .hero h1{font-size:clamp(2.2rem,10vw,3.5rem)}
+  .hero-sub{font-size:1rem}
+  .hero-btns{flex-direction:column;align-items:stretch;gap:10px}
+  .hero-btns .btn{justify-content:center;min-height:48px;font-size:.95rem}
+  /* Audience */
+  .audience{padding:0 20px 60px}
+  .audience-grid{grid-template-columns:1fr}
+  /* Stats */
+  .stats{padding:28px 20px}
+  .stats-inner{gap:16px}
+  .stat{min-width:80px}
+  /* Markets */
+  .markets{padding:14px 20px}
+  .markets-inner{gap:8px}
+  /* Sections */
+  .section{padding:60px 20px}
+  /* Section subtitle */
+  .ss{margin-bottom:36px}
+  /* How grid / split */
+  .how-grid{grid-template-columns:1fr;gap:32px}
+  .split{grid-template-columns:1fr;gap:28px}
+  /* Category grid */
+  .cat-grid{grid-template-columns:repeat(2,1fr)}
+  /* Pricing */
+  .p-grid{grid-template-columns:1fr}
+  /* Feature grids */
+  .fg-grid{grid-template-columns:1fr}
+  /* CTA */
+  .cta-f{padding:72px 20px}
+  .cta-row{flex-direction:column;align-items:stretch;gap:10px}
+  .cta-row .btn{justify-content:center;min-height:48px}
+  /* Footer */
+  .footer{padding:28px 20px;flex-direction:column;align-items:flex-start;gap:12px}
+  .footer-r{text-align:left}
+  /* Modal */
+  .mo{padding:12px}
+  .modal{border-radius:12px}
+  .mh{padding:28px 20px 0}
+  .mb{padding:20px 20px 28px}
+  /* Form rows inside modal */
+  .fr{grid-template-columns:1fr}
+  /* Buttons in scta */
+  .scta{flex-direction:column;gap:10px}
+  .scta .btn{justify-content:center;min-height:48px;width:100%}
+}
+
+/* ═══ MOBILE — 480px ═══ */
+@media(max-width:480px){
+  .hero h1{font-size:2.2rem}
+  .cat-grid{grid-template-columns:1fr}
+  /* Form inputs — prevent iOS zoom */
+  .fi,.fsel,.fta{font-size:16px}
+  .stats-inner{grid-template-columns:repeat(2,1fr);display:grid}
+  .stat{text-align:left}
+  .au-card{padding:24px 20px}
+  .pc{padding:28px 20px}
+}
 </style>
 </head>
 <body>

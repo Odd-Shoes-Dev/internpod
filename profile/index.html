@@ -218,6 +218,69 @@ a{text-decoration:none;color:inherit}
 .card-placeholder{background:var(--gray-100);border:2px dashed var(--gray-200);border-radius:14px;padding:40px 20px;text-align:center;color:var(--gray-400)}
 .card-placeholder svg{width:32px;height:32px;margin:0 auto 8px;display:block}
 .card-placeholder p{font-size:.82rem;line-height:1.5}
+
+/* ═══ MOBILE — 768px ═══ */
+@media(max-width:768px){
+  /* Topbar */
+  .topbar{padding:0 16px}
+  .topbar-email{display:none}
+  /* Screen boxes */
+  .screen-box{padding:36px 24px}
+  /* Role cards: stack */
+  .role-cards{grid-template-columns:1fr}
+  /* Wizard */
+  #wizard-screen{padding:24px 16px}
+  .wizard-inner{max-width:100%}
+  .wizard-header{margin-bottom:24px}
+  .wizard-card{padding:28px 20px;border-radius:16px}
+  .wizard-grid{grid-template-columns:1fr}
+  /* Wizard step 4 preview row: form stacks above preview */
+  .wizard-preview-row{grid-template-columns:1fr}
+  /* Hide preview column in wizard on mobile to reduce scroll */
+  #wz-preview-col{display:none !important}
+  /* Wizard nav buttons */
+  .btn-wz-next,.btn-wz-back{min-height:44px}
+  .wizard-nav{margin-top:20px}
+  /* App shell */
+  .main-layout{grid-template-columns:1fr;gap:16px;padding:16px}
+  /* Preview col moves to top on mobile (already handled by existing order:-1) */
+  .preview-col{position:static;top:auto}
+  /* Form card */
+  .form-section{padding:20px 18px}
+  .form-grid{grid-template-columns:1fr}
+  /* Form actions: stack */
+  .form-actions{flex-wrap:wrap;gap:10px;padding:16px 18px}
+  .btn-save{flex:1;justify-content:center;min-height:44px}
+  .btn-delete{margin-left:0;width:100%;justify-content:center;min-height:44px}
+  /* Skill categories */
+  .skill-categories{grid-template-columns:1fr}
+  /* Avail toggle */
+  .avail-toggle button{font-size:.8rem;padding:10px 6px}
+}
+
+/* ═══ MOBILE — 480px ═══ */
+@media(max-width:480px){
+  .screen-box{padding:28px 18px;border-radius:16px}
+  /* Prevent iOS zoom on form inputs */
+  .wz-field input,.wz-field select,.wz-field textarea,
+  .field input,.field select,.field textarea,
+  .tag-input-inner{font-size:16px}
+  /* Wizard card */
+  .wizard-card{padding:22px 16px}
+  .wizard-card h2{font-size:1.4rem}
+  /* Wizard header brand */
+  .wizard-header-brand{font-size:15px}
+  /* Ob-card */
+  .ob-card{padding:22px 16px}
+  /* Topbar brand */
+  .topbar-brand span{font-size:15px}
+  /* Avail toggle: wrap */
+  .avail-toggle{flex-wrap:wrap}
+  .avail-toggle button{flex:none;width:100%;border-radius:0;font-size:.85rem}
+  /* Form actions */
+  .form-actions{flex-direction:column}
+  .btn-save,.btn-delete{width:100%;justify-content:center}
+}
 </style>
 </head>
 <body>

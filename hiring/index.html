@@ -239,6 +239,62 @@ a{text-decoration:none;color:inherit}
 .confirmed-banner svg{width:18px;height:18px;color:var(--green);flex-shrink:0}
 .confirmed-banner p{font-size:.85rem;color:#15803d;line-height:1.5}
 .confirmed-banner strong{font-weight:700}
+
+/* ═══ MOBILE — 768px ═══ */
+@media(max-width:768px){
+  /* Topbar: hide email, shrink */
+  .topbar{padding:0 16px}
+  .topbar-email{display:none}
+  .topbar-name{max-width:120px}
+  /* Screen boxes */
+  .screen-box{padding:36px 24px}
+  /* Role cards: stack on small */
+  .role-cards{grid-template-columns:1fr}
+  /* Onboarding wizard */
+  #onboarding-screen{padding:24px 16px}
+  .ob-inner{max-width:100%}
+  .ob-card{padding:28px 20px}
+  .ob-grid{grid-template-columns:1fr}
+  .btn-ob-next,.btn-ob-back{min-height:44px}
+  /* Main layout: already handled by existing 900px query — reinforce */
+  .main-layout{display:block}
+  .left-panel{padding:16px}
+  /* Intern grid: single column */
+  .intern-grid{grid-template-columns:1fr}
+  /* Pod sidebar: full width below */
+  .pod-sidebar{border-top:2px solid var(--gray-200);padding:20px 16px}
+  /* Filter bar */
+  .filter-bar{padding:12px 14px}
+  .filter-row{gap:8px}
+  .filter-select{font-size:.82rem}
+  /* Confirm box */
+  .confirm-box{padding:32px 20px}
+  /* Buttons: minimum tap target */
+  .btn-add,.btn-remove,.btn-taken,.btn-confirm{min-height:44px}
+  /* Company profile grid */
+  .cp-grid{grid-template-columns:1fr}
+}
+
+/* ═══ MOBILE — 480px ═══ */
+@media(max-width:480px){
+  .topbar-brand span{font-size:15px}
+  .screen-box{padding:28px 18px;border-radius:16px}
+  /* Form inputs — prevent iOS zoom */
+  .ob-field input,.ob-field select,.ob-field textarea,
+  .cp-field input,.cp-field select,.cp-field textarea,
+  .search-input,.filter-select{font-size:16px}
+  /* Onboarding header: tighten */
+  .ob-header{margin-bottom:24px}
+  .ob-brand{font-size:15px}
+  /* Filter toggle: full width */
+  .filter-toggle{width:100%}
+  .filter-toggle button{font-size:.58rem;padding:6px 8px}
+  /* Intern card padding */
+  .intern-card{padding:18px}
+  /* Confirmation box */
+  .confirm-box{padding:28px 16px}
+  .confirm-intern{padding:12px}
+}
 </style>
 </head>
 <body>
