@@ -586,11 +586,12 @@ function showScreen(id) {
 }
 
 // ── Auth ─────────────────────────────────────
+window.doSignOut = async function() { await supabase.auth.signOut(); location.reload() }
+
 document.getElementById('btn-google-signin').addEventListener('click', async () => {
   await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } })
 })
-document.getElementById('btn-signout').addEventListener('click', doSignOut)
-window.doSignOut = async function() { await supabase.auth.signOut(); location.reload() }
+document.getElementById('btn-signout').addEventListener('click', window.doSignOut)
 
 window.pickRole = async function(role) {
   const { error } = await supabase.from('profiles').insert({ id: currentUser.id, role, email: currentUser.email })
