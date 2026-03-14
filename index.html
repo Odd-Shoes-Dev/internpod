@@ -439,12 +439,27 @@ const supabase = createClient('https://krmqoseusxmjdlfxxdjy.supabase.co','sb_pub
 
 supabase.auth.onAuthStateChange(async (event, session) => {
   if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
-    const { data: prof } = await supabase.from('profiles').select('role').eq('id', session.user.id).maybeSingle()
-    // Known role → send directly to their space
+    const uid = session.user.id
+
+    // 1. localStorage cache — instant redirect, no network needed
+    const cachedUid  = localStorage.getItem('boj_uid')
+    const cachedRole = localStorage.getItem('boj_role')
+    if (cachedUid === uid && cachedRole) {
+      if (cachedRole === 'startup') { location.replace('/hiring'); return }
+      if (cachedRole === 'intern')  { location.replace('/profile'); return }
+      if (cachedRole === 'admin')   { location.replace('/admin'); return }
+    }
+
+    // 2. Cache miss — try DB with 3s timeout
+    const t = new Promise(r => setTimeout(() => r({ data: null }), 3000))
+    const { data: prof } = await Promise.race([
+      supabase.from('profiles').select('role').eq('id', uid).maybeSingle(), t
+    ])
     if (prof?.role === 'startup') { location.replace('/hiring'); return }
     if (prof?.role === 'intern')  { location.replace('/profile'); return }
     if (prof?.role === 'admin')   { location.replace('/admin'); return }
-    // Brand-new user (no role yet) — use the intent they stored before clicking Sign In
+
+    // 3. New user or DB timeout — go by signup intent
     const intent = sessionStorage.getItem('signup_intent')
     location.replace(intent === 'intern' ? '/profile' : '/hiring')
   }
