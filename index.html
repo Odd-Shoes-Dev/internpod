@@ -440,9 +440,10 @@ function subUni(){const n=document.getElementById('u-name').value,uni=document.g
 </script>
 
 <!-- Session check: auto-redirect signed-in users so they never get stuck on the landing page -->
+<script src="/public/config.js"></script>
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-const supabase = createClient('https://krmqoseusxmjdlfxxdjy.supabase.co','sb_publishable_3Bsp_RSJW6Hvdvw9gB3Avg_tbpgQsj_')
+const supabase = createClient(window.SUPABASE_URL, window.SUPABASE_KEY)
 
 async function doLogin() {
   // If already signed in (session exists), just redirect by role

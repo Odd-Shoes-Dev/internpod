@@ -1,11 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "index.html",              "use": "@vercel/static" },
-    { "src": "interns/index.html",      "use": "@vercel/static" },
-    { "src": "hiring/index.html",       "use": "@vercel/static" },
-    { "src": "profile/index.html",      "use": "@vercel/static" },
-    { "src": "admin/index.html",        "use": "@vercel/static" },
-    { "src": "public/assets/logo.svg",  "use": "@vercel/static" }
-  ]
+  "buildCommand": "node build.js",
+  "outputDirectory": ".",
+  "framework": null
 }
