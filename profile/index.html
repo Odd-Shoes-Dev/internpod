@@ -1212,17 +1212,21 @@ window.saveProfile = async function() {
   const payload = getEditFormData()
   try {
     const targetId = existingProfile?.id || internId
+    // If previously rejected, resubmitting counts as a new review request
+    const wasRejected = existingProfile?.status === 'rejected'
+    const putPayload = wasRejected ? { ...payload, status: 'pending' } : payload
     if (targetId) {
-      await apiCall(`/api/interns/${targetId}`, { method: 'PUT', body: JSON.stringify(payload) })
-      if (!existingProfile) existingProfile = { ...payload, id: targetId }
+      await apiCall(`/api/interns/${targetId}`, { method: 'PUT', body: JSON.stringify(putPayload) })
+      if (!existingProfile) existingProfile = { ...putPayload, id: targetId }
     } else {
       const sync = await apiCall('/api/auth/sync', { method: 'POST', body: JSON.stringify({ role: 'intern', email: currentUser.email }) })
       internId = sync.internId
-      if (internId) await apiCall(`/api/interns/${internId}`, { method: 'PUT', body: JSON.stringify(payload) })
-      existingProfile = { ...existingProfile, ...payload, id: internId }
+      if (internId) await apiCall(`/api/interns/${internId}`, { method: 'PUT', body: JSON.stringify(putPayload) })
+      existingProfile = { ...existingProfile, ...putPayload, id: internId }
     }
+    if (wasRejected) existingProfile = { ...existingProfile, status: 'pending' }
     localStorage.setItem('boj_has_profile', '1')
-    status.textContent = 'Saved ✓'; status.style.display = 'block'
+    status.textContent = wasRejected ? 'Resubmitted for review ✓' : 'Saved ✓'; status.style.display = 'block'
     showStatusBanner(existingProfile?.status || 'pending')
     document.getElementById('btn-save-label').textContent = 'Update Profile'
     document.getElementById('btn-delete').style.display = 'block'

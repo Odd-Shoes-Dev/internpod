@@ -38,8 +38,13 @@ module.exports = async function handler(req, res) {
       const {
         name, email, location, whatsapp, main_skill, skills_detail,
         github, portfolio, linkedin, availability, preferred_start_date,
-        english_level, timezones, project_description,
+        english_level, timezones, project_description, status,
       } = req.body
+
+      // Non-admins may only reset their own status to 'pending' (resubmit after rejection)
+      const allowedStatus = role === 'admin'
+        ? status
+        : (status === 'pending' ? 'pending' : undefined)
 
       const { rows } = await db.query(
         `UPDATE public.interns SET
@@ -56,13 +61,14 @@ module.exports = async function handler(req, res) {
           preferred_start_date = COALESCE($11, preferred_start_date),
           english_level = COALESCE($12, english_level),
           timezones = COALESCE($13, timezones),
-          project_description = COALESCE($14, project_description)
-        WHERE id = $15
+          project_description = COALESCE($14, project_description),
+          status = COALESCE($15, status)
+        WHERE id = $16
         RETURNING *`,
         [
           name, email, location, whatsapp, main_skill, skills_detail,
           github, portfolio, linkedin, availability, preferred_start_date,
-          english_level, timezones, project_description, id,
+          english_level, timezones, project_description, allowedStatus ?? null, id,
         ]
       )
       return res.status(200).json(rows[0])

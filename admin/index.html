@@ -304,9 +304,12 @@ a{text-decoration:none;color:inherit}
     <div class="tab-pane" id="tab-interns">
       <div class="section-header">
         <div class="section-title">All Interns</div>
-        <div class="search-bar">
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
-          <input type="text" id="intern-search" placeholder="Search by name, skill, location…" oninput="renderInterns()">
+        <div style="display:flex;gap:10px;align-items:center">
+          <button style="padding:7px 14px;background:#f3f4f6;border:1px solid var(--gray-200);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'" onclick="exportInternsCSV()">📥 CSV</button>
+          <div class="search-bar">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+            <input type="text" id="intern-search" placeholder="Search by name, skill, location…" oninput="renderInterns()">
+          </div>
         </div>
       </div>
       <div class="intern-grid" id="intern-grid">
@@ -318,9 +321,12 @@ a{text-decoration:none;color:inherit}
     <div class="tab-pane" id="tab-startups">
       <div class="section-header">
         <div class="section-title">All Startups</div>
-        <div class="search-bar">
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
-          <input type="text" id="startup-search" placeholder="Search by name, industry…" oninput="renderStartups()">
+        <div style="display:flex;gap:10px;align-items:center">
+          <button style="padding:7px 14px;background:#f3f4f6;border:1px solid var(--gray-200);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'" onclick="exportStartupsCSV()">📥 CSV</button>
+          <div class="search-bar">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+            <input type="text" id="startup-search" placeholder="Search by name, industry…" oninput="renderStartups()">
+          </div>
         </div>
       </div>
       <div class="startups-list" id="startups-list">
@@ -628,6 +634,55 @@ window.saveEdit = async function() {
   if (idx !== -1) allInterns[idx] = { ...allInterns[idx], ...payload }
   closeModal()
   renderInterns()
+}
+
+window.exportInternsCSV = function() {
+  if (!allInterns || allInterns.length === 0) { alert('No interns to export.'); return }
+  const headers = ['Name', 'Email', 'Location', 'WhatsApp', 'Main Skill', 'Skills', 'GitHub', 'Portfolio', 'English Level', 'Availability', 'Timezone', 'Start Date', 'Status', 'Project Description']
+  const rows = allInterns.map(i => [
+    i.name || '',
+    i.email || '',
+    i.location || '',
+    i.whatsapp || '',
+    i.main_skill || '',
+    i.skills_detail || '',
+    i.github || '',
+    i.portfolio || '',
+    i.english_level || '',
+    i.availability || '',
+    i.timezones || '',
+    i.preferred_start_date || '',
+    i.status || 'pending',
+    (i.project_description || '').replace(/"/g, '""'),
+  ])
+  const csv = [headers, ...rows].map(row => row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(',')).join('\n')
+  downloadCSV(csv, `interns_${new Date().toISOString().split('T')[0]}.csv`)
+}
+
+window.exportStartupsCSV = function() {
+  if (!allStartups || allStartups.length === 0) { alert('No startups to export.'); return }
+  const headers = ['Company Name', 'Website', 'Email', 'Phone', 'Location', 'Industry', 'Team Size', 'Description', 'Joined']
+  const rows = allStartups.map(s => [
+    s.company_name || '',
+    s.website || '',
+    s.email || '',
+    s.phone || '',
+    s.location || '',
+    s.industry || '',
+    s.team_size || '',
+    (s.description || '').replace(/"/g, '""'),
+    new Date(s.created_at).toLocaleDateString(),
+  ])
+  const csv = [headers, ...rows].map(row => row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(',')).join('\n')
+  downloadCSV(csv, `startups_${new Date().toISOString().split('T')[0]}.csv`)
+}
+
+function downloadCSV(csv, filename) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = filename
+  link.click()
 }
 
 window.moderateIntern = async function(id, status) {
