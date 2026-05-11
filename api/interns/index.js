@@ -7,8 +7,23 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    await requireAuth(req)
+    const { userId } = await requireAuth(req)
     const db = getPool()
+
+    // If caller is a startup, verify their profile is approved
+    const { rows: profileRows } = await db.query(
+      'SELECT role FROM public.profiles WHERE id = $1',
+      [userId]
+    )
+    if (profileRows[0]?.role === 'startup') {
+      const { rows: spRows } = await db.query(
+        `SELECT status FROM public.startup_profiles WHERE user_id = $1`,
+        [userId]
+      )
+      if (!spRows[0] || spRows[0].status !== 'approved') {
+        return res.status(403).json({ error: 'Your company profile is pending admin approval' })
+      }
+    }
 
     const { rows } = await db.query(
       `SELECT * FROM public.interns WHERE status = 'approved' ORDER BY created_at DESC`

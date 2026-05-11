@@ -120,6 +120,14 @@ a{text-decoration:none;color:inherit}
 .startup-pod-badge{font-family:var(--mono);font-size:.55rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:100px;background:var(--gray-100);color:var(--gray-500);flex-shrink:0}
 .startup-pod-badge.confirmed{background:#dcfce7;color:var(--green)}
 .startup-pod-badge.partial{background:var(--coral-pale);color:var(--coral)}
+.startup-status-badge{font-family:var(--mono);font-size:.55rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:100px;flex-shrink:0}
+.startup-status-badge.pending{background:#fef9c3;color:#92400e}
+.startup-status-badge.approved{background:#dcfce7;color:#15803d}
+.startup-status-badge.rejected{background:#fee2e2;color:#b91c1c}
+.btn-startup-approve{padding:6px 12px;border-radius:7px;border:none;background:#dcfce7;color:#15803d;font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:background .2s}
+.btn-startup-approve:hover{background:#bbf7d0}
+.btn-startup-reject{padding:6px 12px;border-radius:7px;border:none;background:#fee2e2;color:#b91c1c;font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:background .2s}
+.btn-startup-reject:hover{background:#fecaca}
 .startup-chevron{font-size:12px;color:var(--gray-400);transition:transform .2s;flex-shrink:0}
 .startup-card.open .startup-chevron{transform:rotate(90deg)}
 .startup-body{display:none;padding:0 20px 16px;border-top:1px solid var(--gray-100)}
@@ -306,7 +314,7 @@ a{text-decoration:none;color:inherit}
       Interns <span class="tab-count" id="interns-count">—</span><span class="pending-dot" id="pending-dot" style="display:none"></span>
     </button>
     <button class="tab-btn" id="tab-startups-btn" onclick="switchTab('startups')">
-      Startups <span class="tab-count" id="startups-count">—</span>
+      Startups <span class="tab-count" id="startups-count">—</span><span class="pending-dot" id="pending-startups-dot" style="display:none"></span>
     </button>
   </div>
 
@@ -318,6 +326,7 @@ a{text-decoration:none;color:inherit}
         <div class="stat-card"><div class="stat-val" id="stat-interns">—</div><div class="stat-label">Total Interns</div></div>
         <div class="stat-card"><div class="stat-val" id="stat-pending">—</div><div class="stat-label">Pending Review</div></div>
         <div class="stat-card"><div class="stat-val" id="stat-startups">—</div><div class="stat-label">Startups</div></div>
+        <div class="stat-card"><div class="stat-val" id="stat-pending-startups">—</div><div class="stat-label">Startups Pending</div></div>
         <div class="stat-card"><div class="stat-val" id="stat-pods">—</div><div class="stat-label">Active Pods</div></div>
         <div class="stat-card"><div class="stat-val" id="stat-confirmed">—</div><div class="stat-label">Confirmed Pods</div></div>
       </div>
@@ -517,15 +526,19 @@ function updateStats() {
   const startupIds = [...new Set(allSelections.map(s => s.startup_id))]
   const confirmedCount = startupIds.filter(sid => allSelections.some(s => s.startup_id===sid && s.confirmed)).length
   const pendingCount = allInterns.filter(i => i.status === 'pending').length
-  document.getElementById('stat-interns').textContent   = allInterns.length
-  document.getElementById('stat-pending').textContent   = pendingCount
-  document.getElementById('stat-startups').textContent  = allStartups.length
-  document.getElementById('stat-pods').textContent      = startupIds.length
-  document.getElementById('stat-confirmed').textContent = confirmedCount
-  document.getElementById('interns-count').textContent  = allInterns.length
-  document.getElementById('startups-count').textContent = allStartups.length
+  const pendingStartups = allStartups.filter(s => (s.status || 'pending') === 'pending').length
+  document.getElementById('stat-interns').textContent          = allInterns.length
+  document.getElementById('stat-pending').textContent          = pendingCount
+  document.getElementById('stat-startups').textContent         = allStartups.length
+  document.getElementById('stat-pending-startups').textContent = pendingStartups
+  document.getElementById('stat-pods').textContent             = startupIds.length
+  document.getElementById('stat-confirmed').textContent        = confirmedCount
+  document.getElementById('interns-count').textContent         = allInterns.length
+  document.getElementById('startups-count').textContent        = allStartups.length
   const dot = document.getElementById('pending-dot')
   if (dot) dot.style.display = pendingCount > 0 ? 'inline-block' : 'none'
+  const sdot = document.getElementById('pending-startups-dot')
+  if (sdot) sdot.style.display = pendingStartups > 0 ? 'inline-block' : 'none'
 }
 
 // ── Interns ───────────────────────────────────
@@ -603,6 +616,14 @@ window.renderStartups = function() {
         }).join('')
       : '<div class="pod-empty">No interns selected yet.</div>'
 
+    const spStatus = startup.status || 'pending'
+    const statusLabel = spStatus === 'approved' ? '✓ Approved' : spStatus === 'rejected' ? '✕ Declined' : '⏳ Pending'
+    const modButtons = spStatus !== 'approved'
+      ? `<button class="btn-startup-approve" onclick="moderateStartup('${startup.user_id}','approved')">\u2713 Approve</button>`
+      : `<button class="btn-startup-reject" onclick="moderateStartup('${startup.user_id}','rejected')">\u2715 Decline</button>`
+    const resetBtn = spStatus === 'rejected'
+      ? `<button class="btn-startup-approve" onclick="moderateStartup('${startup.user_id}','pending')" style="background:#f3f4f6;color:var(--gray-600)">↩ Reset</button>`
+      : ''
     return `
     <div class="startup-card" id="sc-${startup.id}">
       <div class="startup-head" onclick="toggleStartup('${startup.id}')">
@@ -611,6 +632,7 @@ window.renderStartups = function() {
           <div class="startup-name">${startup.company_name}</div>
           <div class="startup-meta">${startup.industry||'—'} · ${startup.location||'—'} · ${startup.email||'—'}${startup.phone ? ` · 📞 ${startup.phone}` : ''}</div>
         </div>
+        <span class="startup-status-badge ${spStatus}">${statusLabel}</span>
         <span class="startup-pod-badge ${badgeCls}">${badgeText}</span>
         <span class="startup-chevron">▶</span>
       </div>
@@ -621,6 +643,7 @@ window.renderStartups = function() {
           <div class="startup-detail"><span>Joined</span>${new Date(startup.created_at).toLocaleDateString()}</div>
         </div>
         ${startup.description?`<div class="startup-desc">${startup.description}</div>`:''}
+        <div style="display:flex;gap:8px;margin-bottom:14px">${modButtons}${resetBtn}</div>
         <div class="pod-selection-title">Pod selection (${podCount}/3)</div>
         <div class="pod-selection-list">${podHtml}</div>
       </div>
@@ -730,6 +753,15 @@ function downloadCSV(csv, filename) {
   link.href = URL.createObjectURL(blob)
   link.download = filename
   link.click()
+}
+
+window.moderateStartup = async function(userId, status) {
+  try {
+    const updated = await apiCall(`/api/admin/startups?id=${userId}`, { method: 'PUT', body: JSON.stringify({ status }) })
+    const idx = allStartups.findIndex(s => s.user_id === userId)
+    if (idx !== -1) allStartups[idx] = { ...allStartups[idx], status: updated.status }
+    updateStats(); renderStartups()
+  } catch (err) { alert('Error: ' + err.message) }
 }
 
 window.moderateIntern = async function(id, status) {
