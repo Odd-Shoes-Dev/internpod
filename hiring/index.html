@@ -791,7 +791,7 @@ window.doSignOut = async function() { clearCache(); await window.Clerk.signOut()
 
 document.getElementById('btn-google-signin').addEventListener('click', () => {
   sessionStorage.setItem('signup_intent', 'startup')
-  window.Clerk.openSignIn()
+  window.Clerk.openSignIn({ afterSignInUrl: window.location.href })
 })
 document.getElementById('btn-signout').addEventListener('click', window.doSignOut)
 
@@ -1017,26 +1017,21 @@ async function routeByRole() {
     if (cacheUid === uid && role) {
       if (role === 'intern') { showScreen('wrong-role-screen'); return }
       if (role === 'admin')  { location.href = '/admin'; return }
-      // startup — if we have a company, check cached status first
-      if (hasCompany) {
-        const cachedStatus = localStorage.getItem('boj_sp_status')
-        if (cachedStatus === 'approved') { setupTopbar(coName); showScreen('app'); loadData(); return }
-        // status may have changed — fetch fresh from DB
-        showScreen('loading-screen')
-        try {
-          const sp = await apiCall('/api/startup-profile')
-          if (sp && sp.status === 'approved') {
-            localStorage.setItem('boj_sp_status', 'approved')
-            setupTopbar(sp.company_name)
-            showScreen('app'); loadData(); return
-          }
-          if (sp) {
-            localStorage.setItem('boj_sp_status', sp.status || 'pending')
-            showCompanyStatusScreen(sp); return
-          }
-        } catch (_) {}
-        showScreen('pending-approval-screen'); return
-      }
+      // startup — always verify status fresh from DB
+      showScreen('loading-screen')
+      try {
+        const sp = await apiCall('/api/startup-profile')
+        if (sp && sp.status === 'approved') {
+          localStorage.setItem('boj_sp_status', 'approved')
+          setupTopbar(sp.company_name)
+          showScreen('app'); loadData(); return
+        }
+        if (sp) {
+          localStorage.setItem('boj_sp_status', sp.status || 'pending')
+          showCompanyStatusScreen(sp); return
+        }
+      } catch (_) {}
+      showScreen('pending-approval-screen'); return
       // no cached company — check DB for existing profile
       showScreen('loading-screen')
       try {
@@ -1104,10 +1099,22 @@ function setupTopbar(companyName) {
 
 // ── Load data ─────────────────────────────────
 async function loadData() {
-  const [allInternsData, allSelectionsData] = await Promise.all([
-    apiCall('/api/interns').catch(() => []),
-    apiCall('/api/pod-selections?all=true').catch(() => [])
-  ])
+  let allInternsData, allSelectionsData
+  try {
+    allInternsData = await apiCall('/api/interns')
+  } catch (err) {
+    if (err.status === 403) {
+      // Startup approval was revoked — re-check and re-route
+      localStorage.removeItem('boj_sp_status')
+      try {
+        const sp = await apiCall('/api/startup-profile')
+        if (sp) { showCompanyStatusScreen(sp); return }
+      } catch (_) {}
+      showScreen('pending-approval-screen'); return
+    }
+    allInternsData = []
+  }
+  try { allSelectionsData = await apiCall('/api/pod-selections?all=true') } catch (_) { allSelectionsData = [] }
   allInterns = allInternsData || []
   takenMap = {}; mySelections = []; podConfirmed = false
   for (const s of (allSelectionsData || [])) {
@@ -1304,7 +1311,8 @@ window.setAvailFilter = function(val) {
 
 window.addEventListener('load', async function() {
   await window.Clerk.load()
-  window.Clerk.addListener(({ user, session }) => {
+
+  function handleAuth({ user, session }) {
     if (user && session) {
       if (!currentUser || currentUser.id !== user.id) {
         currentUser = {
@@ -1320,6 +1328,16 @@ window.addEventListener('load', async function() {
       clearCache()
       showScreen('auth-screen')
     }
+  }
+
+  // Initial render from definitive state — no flash
+  handleAuth({ user: window.Clerk.user, session: window.Clerk.session })
+
+  // Watch for subsequent sign-in / sign-out only (skip immediate first emission)
+  let _listenerReady = false
+  window.Clerk.addListener(({ user, session }) => {
+    if (!_listenerReady) { _listenerReady = true; return }
+    handleAuth({ user, session })
   })
 
   setTimeout(() => {

@@ -25,6 +25,12 @@ body{font-family:var(--sans);color:var(--black);background:var(--gray-100);-webk
 a{text-decoration:none;color:inherit}
 ::selection{background:var(--coral);color:#fff}
 
+/* ── LOADING ─────────────────────────── */
+#loading-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--gray-100);flex-direction:column;gap:16px}
+.loading-logo{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.loading-logo img{width:36px;height:36px;opacity:.5}
+.loading-logo span{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--gray-400)}
+
 /* ── SCREENS ─────────────────────────── */
 .screen{min-height:100vh;display:none;align-items:center;justify-content:center;background:var(--cream);padding:24px}
 .screen-box{background:#fff;border-radius:20px;padding:52px 44px;max-width:440px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.08);border:1px solid var(--gray-200)}
@@ -264,9 +270,16 @@ a{text-decoration:none;color:inherit}
 </style>
 </head>
 <body>
-
+<!-- ══ LOADING ═══════════════════════════════════ -->
+<div id="loading-screen">
+  <div class="loading-logo">
+    <img src="/public/assets/logo.svg" alt="">
+    <span>Blue Ox Jobs</span>
+  </div>
+  <div class="spinner"></div>
+</div>
 <!-- ══ AUTH SCREEN ═══════════════════════════ -->
-<div id="auth-screen" class="screen" style="display:flex">
+<div id="auth-screen" class="screen">
   <div class="screen-box">
     <div class="screen-logo">
       <img src="/public/assets/logo.svg" alt="Blue Ox">
@@ -472,7 +485,7 @@ const SKILL_SHORT = {
 }
 
 function showScreen(id) {
-  ['auth-screen','denied-screen','app'].forEach(s => {
+  ['loading-screen','auth-screen','denied-screen','app'].forEach(s => {
     const el = document.getElementById(s)
     if (el) el.style.display = 'none'
   })
@@ -480,7 +493,7 @@ function showScreen(id) {
   if (el) el.style.display = id === 'app' ? 'block' : 'flex'
 }
 
-window.signIn = async function() { window.Clerk.openSignIn() }
+window.signIn = async function() { window.Clerk.openSignIn({ afterSignInUrl: window.location.href }) }
 window.signOut = async function() { await window.Clerk.signOut(); location.reload() }
 
 window.switchTab = function(tab) {
@@ -492,7 +505,8 @@ window.switchTab = function(tab) {
 
 window.addEventListener('load', async function() {
   await window.Clerk.load()
-  window.Clerk.addListener(async ({ user, session }) => {
+
+  async function handleAuth(user, session) {
     if (user && session) {
       currentUser = { id: user.id, email: user.primaryEmailAddress?.emailAddress || '' }
       try {
@@ -505,6 +519,16 @@ window.addEventListener('load', async function() {
     } else {
       showScreen('auth-screen')
     }
+  }
+
+  // Initial render from definitive state — no flash
+  await handleAuth(window.Clerk.user, window.Clerk.session)
+
+  // Watch for subsequent sign-in / sign-out only (skip immediate first emission)
+  let _listenerReady = false
+  window.Clerk.addListener(async ({ user, session }) => {
+    if (!_listenerReady) { _listenerReady = true; return }
+    await handleAuth(user, session)
   })
 })
 
