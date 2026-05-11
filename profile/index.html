@@ -818,7 +818,7 @@ function showScreen(id) {
 // ── Auth ──────────────────────────────────────
 window.signIn = async function() {
   sessionStorage.setItem('signup_intent', 'intern')
-  window.Clerk.openSignIn()
+  window.Clerk.openSignIn({ afterSignInUrl: window.location.href })
 }
 function clearCache() {
   ['boj_uid','boj_role','boj_has_profile'].forEach(k => localStorage.removeItem(k))
@@ -1277,7 +1277,8 @@ function buildCardHtml(intern) {
 
 window.addEventListener('load', async function() {
   await window.Clerk.load()
-  window.Clerk.addListener(async ({ user, session }) => {
+
+  async function handleAuth({ user, session }) {
     if (user && session) {
       if (!currentUser || currentUser.id !== user.id) {
         currentUser = {
@@ -1293,6 +1294,16 @@ window.addEventListener('load', async function() {
       clearCache()
       showScreen('auth-screen')
     }
+  }
+
+  // Initial render from definitive state — no flash
+  await handleAuth({ user: window.Clerk.user, session: window.Clerk.session })
+
+  // Watch for subsequent sign-in / sign-out only (skip immediate first emission)
+  let _listenerReady = false
+  window.Clerk.addListener(async ({ user, session }) => {
+    if (!_listenerReady) { _listenerReady = true; return }
+    await handleAuth({ user, session })
   })
 
   setTimeout(() => {
