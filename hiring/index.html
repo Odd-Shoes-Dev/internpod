@@ -825,7 +825,30 @@ async function routeByRole() {
       return
     }
 
-    // No localStorage match → ask user to pick role (no DB query needed)
+    // No localStorage match → check DB for existing role before showing role-screen
+    showScreen('loading-screen')
+    try {
+      const { profile } = await apiCall('/api/profile')
+      if (profile) {
+        localStorage.setItem('boj_uid', uid)
+        localStorage.setItem('boj_role', profile.role)
+        if (profile.role === 'admin')  { location.href = '/admin'; return }
+        if (profile.role === 'intern') { showScreen('wrong-role-screen'); return }
+        // startup — check DB for profile
+        const sp = await apiCall('/api/startup-profile').catch(() => null)
+        if (sp && sp.company_name) {
+          localStorage.setItem('boj_has_company', '1')
+          localStorage.setItem('boj_company_name', sp.company_name)
+          setupTopbar(sp.company_name)
+          showScreen('app')
+          loadData()
+          return
+        }
+        showScreen('onboarding-screen')
+        restoreObDraft()
+        return
+      }
+    } catch (_) {}
     showScreen('role-screen')
   } finally {
     _routing = false
