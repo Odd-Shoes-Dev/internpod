@@ -60,7 +60,8 @@ module.exports = async function handler(req, res) {
           location = COALESCE($6, location),
           email = COALESCE($7, email),
           roles_needed = COALESCE($8, roles_needed),
-          phone = COALESCE($9, phone)
+          phone = COALESCE($9, phone),
+          status = CASE WHEN status = 'rejected' THEN 'pending' ELSE status END
          WHERE user_id = $10
          RETURNING *`,
         [company_name, website, description, industry, team_size, location, email, roles_needed, phone, userId]
