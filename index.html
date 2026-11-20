@@ -456,8 +456,8 @@ async function apiCall(path, opts = {}) {
 
 window.addEventListener('load', async function() {
   await window.Clerk.load()
-  document.getElementById('nav-login-btn').addEventListener('click', e => { e.preventDefault(); window.Clerk.openSignIn() })
-  document.getElementById('hero-login-btn').addEventListener('click', e => { e.preventDefault(); window.Clerk.openSignIn() })
+  document.getElementById('nav-login-btn').addEventListener('click', e => { e.preventDefault(); window.Clerk.openSignIn({ afterSignInUrl: window.location.href }) })
+  document.getElementById('hero-login-btn').addEventListener('click', e => { e.preventDefault(); window.Clerk.openSignIn({ afterSignInUrl: window.location.href }) })
 
   window.Clerk.addListener(async ({ user, session }) => {
     if (!user || !session) return
