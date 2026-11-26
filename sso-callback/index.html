@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signing you in — Blue Ox Jobs</title>
+<link rel="icon" href="/public/assets/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500,0,600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--black:#1a1a1a;--white:#fff;--cream:#f8f6f2;--coral:#e05a3a;--gray-200:#ebebeb;--gray-500:#888;
+  --serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',-apple-system,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--cream);min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo img{width:36px;height:36px}
+.logo span{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--black)}
+.spinner{width:28px;height:28px;border:3px solid var(--gray-200);border-top-color:var(--coral);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.note{font-size:.85rem;color:var(--gray-500)}
+.err{display:none;text-align:center;max-width:320px}
+.err a{color:var(--coral);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="logo"><img src="/public/assets/logo.svg" alt=""><span>Blue Ox Jobs</span></div>
+<div class="spinner" id="spinner"></div>
+<p class="note" id="note">Signing you in…</p>
+<div class="err" id="err">
+  <p>That didn't work — the sign-in link may have expired.</p>
+  <p><a href="/">Back to Blue Ox Jobs</a></p>
+</div>
+
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_live_Y2xlcmsuaW50ZXJucG9kLm9kZHNob2VzLmRldiQ"
+  src="https://clerk.internpod.oddshoes.dev/npm/@clerk/clerk-js@6.48.0/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
+<script>
+window.addEventListener('load', async function() {
+  try {
+    await window.Clerk.load()
+    await window.Clerk.handleRedirectCallback()
+    // If handleRedirectCallback didn't navigate away (no pending OAuth flow), fall back home.
+    setTimeout(() => {
+      document.getElementById('spinner').style.display = 'none'
+      document.getElementById('note').style.display = 'none'
+      document.getElementById('err').style.display = 'block'
+    }, 4000)
+  } catch (e) {
+    document.getElementById('spinner').style.display = 'none'
+    document.getElementById('note').style.display = 'none'
+    document.getElementById('err').style.display = 'block'
+  }
+})
+</script>
+</body>
+</html>

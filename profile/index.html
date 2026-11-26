@@ -818,7 +818,11 @@ function showScreen(id) {
 // ── Auth ──────────────────────────────────────
 window.signIn = async function() {
   sessionStorage.setItem('signup_intent', 'intern')
-  window.Clerk.redirectToSignIn({ redirectUrl: window.location.href })
+  await window.Clerk.client.signIn.authenticateWithRedirect({
+    strategy: 'oauth_google',
+    redirectUrl: window.location.origin + '/sso-callback',
+    redirectUrlComplete: window.location.href,
+  })
 }
 function clearCache() {
   ['boj_uid','boj_role','boj_has_profile'].forEach(k => localStorage.removeItem(k))
