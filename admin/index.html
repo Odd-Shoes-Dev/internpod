@@ -493,7 +493,7 @@ function showScreen(id) {
   if (el) el.style.display = id === 'app' ? 'block' : 'flex'
 }
 
-window.signIn = async function() { window.Clerk.openSignIn({ fallbackRedirectUrl: window.location.href }) }
+window.signIn = async function() { window.Clerk.redirectToSignIn({ redirectUrl: window.location.href }) }
 window.signOut = async function() { await window.Clerk.signOut(); location.reload() }
 
 window.switchTab = function(tab) {

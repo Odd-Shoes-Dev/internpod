@@ -818,7 +818,7 @@ function showScreen(id) {
 // ── Auth ──────────────────────────────────────
 window.signIn = async function() {
   sessionStorage.setItem('signup_intent', 'intern')
-  window.Clerk.openSignIn({ fallbackRedirectUrl: window.location.href })
+  window.Clerk.redirectToSignIn({ redirectUrl: window.location.href })
 }
 function clearCache() {
   ['boj_uid','boj_role','boj_has_profile'].forEach(k => localStorage.removeItem(k))

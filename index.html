@@ -456,8 +456,8 @@ async function apiCall(path, opts = {}) {
 
 window.addEventListener('load', async function() {
   await window.Clerk.load()
-  document.getElementById('nav-login-btn').addEventListener('click', e => { e.preventDefault(); window.Clerk.openSignIn({ fallbackRedirectUrl: window.location.href }) })
-  document.getElementById('hero-login-btn').addEventListener('click', e => { e.preventDefault(); window.Clerk.openSignIn({ fallbackRedirectUrl: window.location.href }) })
+  document.getElementById('nav-login-btn').addEventListener('click', e => { e.preventDefault(); window.Clerk.redirectToSignIn({ redirectUrl: window.location.href }) })
+  document.getElementById('hero-login-btn').addEventListener('click', e => { e.preventDefault(); window.Clerk.redirectToSignIn({ redirectUrl: window.location.href }) })
 
   window.Clerk.addListener(async ({ user, session }) => {
     if (!user || !session) return
