@@ -736,7 +736,7 @@ a{text-decoration:none;color:inherit}
   async
   crossorigin="anonymous"
   data-clerk-publishable-key="pk_live_Y2xlcmsuaW50ZXJucG9kLm9kZHNob2VzLmRldiQ"
-  src="https://clerk.internpod.oddshoes.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+  src="https://clerk.internpod.oddshoes.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
   type="text/javascript"
 ></script>
 <script>
@@ -818,7 +818,7 @@ function showScreen(id) {
 // ── Auth ──────────────────────────────────────
 window.signIn = async function() {
   sessionStorage.setItem('signup_intent', 'intern')
-  window.Clerk.openSignIn({ afterSignInUrl: window.location.href })
+  window.Clerk.openSignIn({ fallbackRedirectUrl: window.location.href })
 }
 function clearCache() {
   ['boj_uid','boj_role','boj_has_profile'].forEach(k => localStorage.removeItem(k))

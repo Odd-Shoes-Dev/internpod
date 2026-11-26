@@ -735,7 +735,7 @@ a{text-decoration:none;color:inherit}
   async
   crossorigin="anonymous"
   data-clerk-publishable-key="pk_live_Y2xlcmsuaW50ZXJucG9kLm9kZHNob2VzLmRldiQ"
-  src="https://clerk.internpod.oddshoes.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+  src="https://clerk.internpod.oddshoes.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
   type="text/javascript"
 ></script>
 <script>
@@ -791,7 +791,7 @@ window.doSignOut = async function() { clearCache(); await window.Clerk.signOut()
 
 document.getElementById('btn-google-signin').addEventListener('click', () => {
   sessionStorage.setItem('signup_intent', 'startup')
-  window.Clerk.openSignIn({ afterSignInUrl: window.location.href })
+  window.Clerk.openSignIn({ fallbackRedirectUrl: window.location.href })
 })
 document.getElementById('btn-signout').addEventListener('click', window.doSignOut)
 
