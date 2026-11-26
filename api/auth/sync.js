@@ -45,18 +45,31 @@ module.exports = async function handler(req, res) {
           [userId]
         )
 
-        if (existing.length === 0) {
-          // Brand-new intern — create a fresh empty row
-          const { rows: created } = await db.query(
-            `INSERT INTO public.interns (user_id, email, name)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (user_id) DO NOTHING
-             RETURNING id`,
-            [userId, email, '']
-          )
-          if (created[0]) internId = created[0].id
-        } else {
+        if (existing.length > 0) {
           internId = existing[0].id
+        } else {
+          // Already claimed under a different Clerk ID (e.g. a prior Clerk
+          // app/instance) — re-link the existing row to the new ID by email
+          const { rows: relinked } = await db.query(
+            `UPDATE public.interns SET user_id = $1
+             WHERE id = (SELECT id FROM public.interns WHERE email = $2 AND user_id IS NOT NULL LIMIT 1)
+             RETURNING id`,
+            [userId, email]
+          )
+
+          if (relinked[0]) {
+            internId = relinked[0].id
+          } else {
+            // Brand-new intern — create a fresh empty row
+            const { rows: created } = await db.query(
+              `INSERT INTO public.interns (user_id, email, name)
+               VALUES ($1, $2, $3)
+               ON CONFLICT (user_id) DO NOTHING
+               RETURNING id`,
+              [userId, email, '']
+            )
+            if (created[0]) internId = created[0].id
+          }
         }
       }
     }
