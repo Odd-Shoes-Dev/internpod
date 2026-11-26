@@ -738,6 +738,7 @@ a{text-decoration:none;color:inherit}
   src="https://clerk.internpod.oddshoes.dev/npm/@clerk/clerk-js@6.48.0/dist/clerk.browser.js"
   type="text/javascript"
 ></script>
+<script src="/public/auth-widget.js"></script>
 <script>
 async function apiCall(path, opts = {}) {
   const token = await window.Clerk?.session?.getToken()
@@ -789,13 +790,9 @@ function clearCache() {
 }
 window.doSignOut = async function() { clearCache(); await window.Clerk.signOut(); location.reload() }
 
-document.getElementById('btn-google-signin').addEventListener('click', async () => {
+document.getElementById('btn-google-signin').addEventListener('click', () => {
   sessionStorage.setItem('signup_intent', 'startup')
-  await window.Clerk.client.signIn.authenticateWithRedirect({
-    strategy: 'oauth_google',
-    redirectUrl: window.location.origin + '/sso-callback',
-    redirectUrlComplete: window.location.href,
-  })
+  window.AuthWidget.open()
 })
 document.getElementById('btn-signout').addEventListener('click', window.doSignOut)
 

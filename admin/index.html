@@ -455,6 +455,7 @@ a{text-decoration:none;color:inherit}
   src="https://clerk.internpod.oddshoes.dev/npm/@clerk/clerk-js@6.48.0/dist/clerk.browser.js"
   type="text/javascript"
 ></script>
+<script src="/public/auth-widget.js"></script>
 <script>
 async function apiCall(path, opts = {}) {
   const token = await window.Clerk?.session?.getToken()
@@ -493,13 +494,7 @@ function showScreen(id) {
   if (el) el.style.display = id === 'app' ? 'block' : 'flex'
 }
 
-window.signIn = async function() {
-  await window.Clerk.client.signIn.authenticateWithRedirect({
-    strategy: 'oauth_google',
-    redirectUrl: window.location.origin + '/sso-callback',
-    redirectUrlComplete: window.location.href,
-  })
-}
+window.signIn = async function() { window.AuthWidget.open() }
 window.signOut = async function() { await window.Clerk.signOut(); location.reload() }
 
 window.switchTab = function(tab) {
