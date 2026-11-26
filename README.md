@@ -13,7 +13,7 @@ A platform that matches interns with startups as "pods". Startups browse intern 
 | Frontend | Vanilla HTML / CSS / JS (no framework) |
 | Backend | Vercel Serverless Functions (Node.js) |
 | Database | PostgreSQL via [Neon](https://neon.tech) |
-| Auth | [Clerk](https://clerk.com) (Google OAuth + email) |
+| Auth | [Clerk](https://clerk.com) (Google OAuth + email verification code, no password) |
 | Deployment | Vercel |
 
 ---
@@ -26,6 +26,7 @@ A platform that matches interns with startups as "pods". Startups browse intern 
 /interns/                — Public intern listings (for startups to browse)
 /hiring/                 — Hiring page
 /profile/                — Intern/startup profile management
+/sso-callback/           — Completes the Google OAuth redirect (Clerk handleRedirectCallback)
 /api/                    — Vercel serverless API routes
   auth/sync              — POST: syncs Clerk user to database, assigns role
   profile/               — GET: returns current user's profile + role data
@@ -36,6 +37,7 @@ A platform that matches interns with startups as "pods". Startups browse intern 
   _lib/auth.js           — Clerk token verification middleware
   _lib/db.js             — Neon PostgreSQL connection pool
 /neon/                   — Database setup SQL files (run once)
+/public/auth-widget.js   — Shared sign-in/sign-up modal (Google + email code), used by every page
 /public/config.js        — Runtime config (generated, not committed)
 ```
 
@@ -123,8 +125,8 @@ The app will be available at `http://localhost:3000`.
 ### Auth flow
 
 1. Open `http://localhost:3000`
-2. Click **Login** — a Clerk modal will open
-3. Sign in with Google or email
+2. Click **Login** — the shared sign-in widget (`public/auth-widget.js`) opens on top of the current page
+3. Choose **Continue with Google** (redirects to Google, then back via `/sso-callback`) or enter an email address to receive a one-time verification code — the same code step handles both signing in to an existing account and creating a new one, since passwords are disabled
 4. On first sign-in, the app calls `POST /api/auth/sync` with `{ role, email }` to register the user
 5. Role is stored in `profiles` table
 
