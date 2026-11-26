@@ -789,9 +789,13 @@ function clearCache() {
 }
 window.doSignOut = async function() { clearCache(); await window.Clerk.signOut(); location.reload() }
 
-document.getElementById('btn-google-signin').addEventListener('click', () => {
+document.getElementById('btn-google-signin').addEventListener('click', async () => {
   sessionStorage.setItem('signup_intent', 'startup')
-  window.Clerk.redirectToSignIn({ redirectUrl: window.location.href })
+  await window.Clerk.client.signIn.authenticateWithRedirect({
+    strategy: 'oauth_google',
+    redirectUrl: window.location.origin + '/sso-callback',
+    redirectUrlComplete: window.location.href,
+  })
 })
 document.getElementById('btn-signout').addEventListener('click', window.doSignOut)
 
