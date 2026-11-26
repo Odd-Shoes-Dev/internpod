@@ -446,6 +446,7 @@ function subUni(){const n=document.getElementById('u-name').value,uni=document.g
   src="https://clerk.internpod.oddshoes.dev/npm/@clerk/clerk-js@6.48.0/dist/clerk.browser.js"
   type="text/javascript"
 ></script>
+<script src="/public/auth-widget.js"></script>
 <script>
 async function apiCall(path, opts = {}) {
   const token = await window.Clerk?.session?.getToken()
@@ -456,8 +457,8 @@ async function apiCall(path, opts = {}) {
 
 window.addEventListener('load', async function() {
   await window.Clerk.load()
-  document.getElementById('nav-login-btn').addEventListener('click', e => { e.preventDefault(); window.Clerk.redirectToSignIn({ redirectUrl: window.location.href }) })
-  document.getElementById('hero-login-btn').addEventListener('click', e => { e.preventDefault(); window.Clerk.redirectToSignIn({ redirectUrl: window.location.href }) })
+  document.getElementById('nav-login-btn').addEventListener('click', e => { e.preventDefault(); window.AuthWidget.open() })
+  document.getElementById('hero-login-btn').addEventListener('click', e => { e.preventDefault(); window.AuthWidget.open() })
 
   window.Clerk.addListener(async ({ user, session }) => {
     if (!user || !session) return
